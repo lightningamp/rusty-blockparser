@@ -10,6 +10,7 @@ pub struct UnspentValue {
     pub block_height: u64,
     pub value: u64,
     pub outnum: u32,
+    pub tx_index: u32,
     pub address: String,
 }
 
@@ -33,6 +34,7 @@ pub fn remove_unspents(
 pub fn insert_unspents(
     tx: &Hashed<EvaluatedTx>,
     block_height: u64,
+    tx_index: u32,
     unspents: &mut HashMap<Vec<u8>, UnspentValue>,
 ) -> u64 {
     let mut count = 0;
@@ -44,6 +46,7 @@ pub fn insert_unspents(
                     address: address.clone(),
                     value: output.out.value,
                     outnum: i as u32,
+                    tx_index,
                 };
 
                 let key = TxOutpoint::new(tx.hash, i as u32).to_bytes();
@@ -110,9 +113,9 @@ mod tests {
         let txs = reader.read_txs(1, 0x00).unwrap();
         let block1 = Block::new(0, header.clone(), VarUint::from(1u8), txs);
 
-        for tx in &block1.txs {
+        for (i, tx) in block1.txs.iter().enumerate() {
             remove_unspents(&tx, &mut unspents);
-            insert_unspents(&tx, 100000, &mut unspents);
+            insert_unspents(&tx, 100000, i as u32, &mut unspents);
         }
         let value = unspents
             .get(&TxOutpoint::new(block1.txs[0].hash, 0).to_bytes())
@@ -249,9 +252,9 @@ mod tests {
         let txs = reader.read_txs(1, 0x00).unwrap();
         let block2 = Block::new(0, header.clone(), VarUint::from(1u8), txs);
 
-        for tx in &block2.txs {
+        for (i, tx) in block2.txs.iter().enumerate() {
             remove_unspents(&tx, &mut unspents);
-            insert_unspents(&tx, 105001, &mut unspents);
+            insert_unspents(&tx, 105001, i as u32, &mut unspents);
         }
 
         // Original unspent should no longer exist in the hashmap

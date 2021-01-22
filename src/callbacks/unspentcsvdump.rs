@@ -80,9 +80,9 @@ impl Callback for UnspentCsvDump {
     ///   * output_val
     ///   * address
     fn on_block(&mut self, block: &Block, block_height: u64) -> OpResult<()> {
-        for tx in &block.txs {
+        for (i, tx) in block.txs.iter().enumerate() {
             self.in_count += common::remove_unspents(&tx, &mut self.unspents);
-            self.out_count += common::insert_unspents(&tx, block_height, &mut self.unspents);
+            self.out_count += common::insert_unspents(&tx, block_height, i as u32, &mut self.unspents);
         }
         self.tx_count += block.tx_count.value;
         Ok(())
@@ -91,8 +91,8 @@ impl Callback for UnspentCsvDump {
     fn on_complete(&mut self, block_height: u64) -> OpResult<()> {
         self.writer.write_all(
             format!(
-                "{};{};{};{};{};{}\n",
-                "txid", "indexOut", "height", "value", "address", "outnum"
+                "{};{};{};{};{};{};{}\n",
+                "txid", "indexOut", "height", "value", "address", "outnum", "txIndex"
             )
             .as_bytes(),
         )?;
@@ -101,13 +101,14 @@ impl Callback for UnspentCsvDump {
             let mut index = &key[32..];
             self.writer.write_all(
                 format!(
-                    "{};{};{};{};{};{}\n",
+                    "{};{};{};{};{};{};{}\n",
                     utils::arr_to_hex_swapped(txid),
                     index.read_u32::<LittleEndian>()?,
                     value.block_height,
                     value.value,
                     value.address,
                     value.outnum,
+                    value.tx_index,
                 )
                 .as_bytes(),
             )?;
