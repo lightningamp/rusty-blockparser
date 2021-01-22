@@ -9,6 +9,7 @@ use crate::common::utils;
 pub struct UnspentValue {
     pub block_height: u64,
     pub value: u64,
+    pub outnum: u32,
     pub address: String,
 }
 
@@ -42,6 +43,7 @@ pub fn insert_unspents(
                     block_height,
                     address: address.clone(),
                     value: output.out.value,
+                    outnum: i as u32,
                 };
 
                 let key = TxOutpoint::new(tx.hash, i as u32).to_bytes();
@@ -118,6 +120,7 @@ mod tests {
         assert_eq!(value.block_height, 100000);
         assert_eq!(value.value, 556000000);
         assert_eq!(value.address, "1JqDybm2nWTENrHvMyafbSXXtTk5Uv5QAn");
+        assert_eq!(value.outnum, 0);
 
         // Create a mock of txid 5aa8e36f9423ee5fcf17c1d0d45d6988b8a5773eae8ad25d945bf34352040009,
         // which decreases balance of address 1JqDybm2nWTENrHvMyafbSXXtTk5Uv5QAn by 5.56 BTC.
@@ -263,5 +266,6 @@ mod tests {
         assert_eq!(value.block_height, 105001);
         assert_eq!(value.value, 9070000000);
         assert_eq!(value.address, "1EYXXHs5gV4pc7QAddmDj5z7m14QPHGvWL");
+        assert_eq!(value.outnum, 0);
     }
 }

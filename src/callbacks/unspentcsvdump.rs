@@ -91,8 +91,8 @@ impl Callback for UnspentCsvDump {
     fn on_complete(&mut self, block_height: u64) -> OpResult<()> {
         self.writer.write_all(
             format!(
-                "{};{};{};{};{}\n",
-                "txid", "indexOut", "height", "value", "address"
+                "{};{};{};{};{};{}\n",
+                "txid", "indexOut", "height", "value", "address", "outnum"
             )
             .as_bytes(),
         )?;
@@ -101,12 +101,13 @@ impl Callback for UnspentCsvDump {
             let mut index = &key[32..];
             self.writer.write_all(
                 format!(
-                    "{};{};{};{};{}\n",
+                    "{};{};{};{};{};{}\n",
                     utils::arr_to_hex_swapped(txid),
                     index.read_u32::<LittleEndian>()?,
                     value.block_height,
                     value.value,
-                    value.address
+                    value.address,
+                    value.outnum,
                 )
                 .as_bytes(),
             )?;
